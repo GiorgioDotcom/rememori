@@ -374,7 +374,7 @@ a:hover { color: var(--ink); }
 
 .runtime-list {
   list-style: none; padding: 0;
-  margin: var(--s-12) 0;
+  margin: var(--s-12) auto;
   max-width: 56rem;
 }
 .runtime-list li {

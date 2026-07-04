@@ -91,20 +91,23 @@ a:hover { color: var(--ink); }
 
 /* ---------- hero ---------- */
 
-.hero {
-  position: relative;
-  min-height: min(92vh, 60rem);
-  display: grid; align-items: center;
-  padding: var(--s-16) clamp(var(--s-4), 5vw, var(--s-12));
-  overflow: hidden;
-}
-
+/* full-page memory field: fixed behind everything, content stacks above */
 #field {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  opacity: 0.55;
+  position: fixed; inset: 0; width: 100vw; height: 100vh;
+  z-index: 0;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.top, main, .foot { position: relative; z-index: 1; }
+
+.hero {
+  min-height: min(92vh, 60rem);
+  display: grid; align-items: center; justify-items: center;
+  padding: var(--s-16) clamp(var(--s-4), 5vw, var(--s-12));
+  text-align: center;
 }
 
-.hero-inner { position: relative; max-width: 46rem; }
+.hero-inner { max-width: 46rem; }
 
 .hero h1 {
   font-size: clamp(2.6rem, 7vw, 5.25rem);
@@ -119,6 +122,7 @@ a:hover { color: var(--ink); }
   font-size: clamp(1.1rem, 1.8vw, 1.3rem);
   color: var(--muted);
   max-width: 40rem;
+  margin-inline: auto;
   margin-bottom: var(--s-8);
   line-height: 1.6;
 }
@@ -160,6 +164,17 @@ a:hover { color: var(--ink); }
 
 /* ---------- problem ---------- */
 
+/* centered single-column text sections */
+.problem .measure, .notfor .measure, .demo-head.measure {
+  margin-inline: auto;
+  text-align: center;
+}
+.anywhere > h2, .anywhere-note, .cases > h2 {
+  margin-inline: auto;
+  text-align: center;
+}
+.runtime-list, .cases-grid { margin-inline: auto; }
+
 .problem {
   padding: var(--sect) clamp(var(--s-4), 5vw, var(--s-12));
   border-top: 1px solid var(--line);
@@ -175,7 +190,7 @@ a:hover { color: var(--ink); }
 
 .verbs {
   padding: var(--sect) clamp(var(--s-4), 5vw, var(--s-12));
-  background: var(--surface);
+  background: color-mix(in oklch, var(--surface) 80%, transparent);
   border-block: 1px solid var(--line);
 }
 .verbs-grid {
@@ -230,6 +245,7 @@ a:hover { color: var(--ink); }
 
 .demo-panel {
   max-width: 44rem;
+  margin-inline: auto;
   margin-top: var(--s-12);
   background: var(--surface);
   border: 1px solid var(--line);
@@ -295,7 +311,7 @@ a:hover { color: var(--ink); }
 
 .graph {
   padding: var(--sect) clamp(var(--s-4), 5vw, var(--s-12));
-  background: var(--surface);
+  background: color-mix(in oklch, var(--surface) 80%, transparent);
   border-block: 1px solid var(--line);
 }
 .graph-grid {
@@ -401,7 +417,7 @@ a:hover { color: var(--ink); }
 
 .notfor {
   padding: var(--sect) clamp(var(--s-4), 5vw, var(--s-12));
-  background: var(--surface);
+  background: color-mix(in oklch, var(--surface) 80%, transparent);
   border-top: 1px solid var(--line);
 }
 .notfor p { color: var(--muted); }
@@ -413,7 +429,10 @@ a:hover { color: var(--ink); }
   padding: var(--s-16) clamp(var(--s-4), 5vw, var(--s-12)) var(--s-12);
   border-top: 1px solid var(--line);
   display: grid; gap: var(--s-4);
+  justify-items: center; text-align: center;
 }
+.foot nav { justify-content: center; }
+.foot-note { margin-inline: auto; }
 .foot-brand { font-weight: 800; font-size: 1.1rem; margin: 0; }
 .foot nav { display: flex; gap: var(--s-6); }
 .foot nav a { color: var(--muted); text-decoration: none; }

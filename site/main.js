@@ -38,7 +38,7 @@ if (codeBlock) observer.observe(codeBlock);
 const graphFig = document.getElementById('graph-fig');
 if (graphFig) observer.observe(graphFig);
 
-/* ---------- hero canvas: drifting memory field ---------- */
+/* ---------- full-page canvas: drifting memory field, mouse-aware ---------- */
 
 const canvas = document.getElementById('field');
 if (canvas && !reduced) {
@@ -47,12 +47,12 @@ if (canvas && !reduced) {
   let w, h, nodes;
 
   const resize = () => {
-    w = canvas.clientWidth;
-    h = canvas.clientHeight;
+    w = innerWidth;
+    h = innerHeight;
     canvas.width = w * dpr;
     canvas.height = h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const count = Math.min(46, Math.floor((w * h) / 26000));
+    const count = Math.min(60, Math.floor((w * h) / 24000));
     nodes = Array.from({ length: count }, () => ({
       x: Math.random() * w,
       y: Math.random() * h,
@@ -63,6 +63,13 @@ if (canvas && !reduced) {
   };
   resize();
   addEventListener('resize', resize);
+
+  /* pointer: nodes near the cursor drift away, gently */
+  const mouse = { x: -1e4, y: -1e4 };
+  const REACH = 150;
+  const MAX_V = 0.9;
+  addEventListener('pointermove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
+  addEventListener('pointerleave', () => { mouse.x = -1e4; mouse.y = -1e4; });
 
   const LINK = 130;
   let running = true;
@@ -76,6 +83,18 @@ if (canvas && !reduced) {
     ctx.clearRect(0, 0, w, h);
 
     for (const n of nodes) {
+      const dx = n.x - mouse.x, dy = n.y - mouse.y;
+      const d = Math.hypot(dx, dy);
+      if (d < REACH && d > 0.5) {
+        const push = ((REACH - d) / REACH) * 0.045;
+        n.vx += (dx / d) * push;
+        n.vy += (dy / d) * push;
+      }
+      /* cap speed, add gentle friction so nudges settle back to drift */
+      const speed = Math.hypot(n.vx, n.vy);
+      if (speed > MAX_V) { n.vx = (n.vx / speed) * MAX_V; n.vy = (n.vy / speed) * MAX_V; }
+      n.vx *= 0.995; n.vy *= 0.995;
+
       n.x += n.vx; n.y += n.vy;
       if (n.x < 0 || n.x > w) n.vx *= -1;
       if (n.y < 0 || n.y > h) n.vy *= -1;

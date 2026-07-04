@@ -57,7 +57,7 @@ export class Memory {
     const entities =
       options.entities ?? (this.extractor ? await this.extractor.extract(text) : []);
     const record: MemoryRecord = {
-      id: crypto.randomUUID(),
+      id: randomId(),
       text,
       vector: normalize(vector),
       tags: options.tags ?? [],
@@ -257,4 +257,14 @@ export class Memory {
 
 function clamp01(n: number): number {
   return Math.min(1, Math.max(0, n));
+}
+
+/** UUID v4 via WebCrypto when available (browser, edge, Node 19+), else Math.random (Node 18 without the global). IDs are not security tokens. */
+function randomId(): string {
+  const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+  if (c?.randomUUID) return c.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => {
+    const r = (Math.random() * 16) | 0;
+    return (ch === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }

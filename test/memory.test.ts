@@ -126,3 +126,68 @@ describe('Memory', () => {
     expect(reopened.size).toBe(1);
   });
 });
+
+describe('Entity graph', () => {
+  it('extracts entities heuristically and builds the graph', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    await mem.remember('Giorgio fixed the car with Mario Rossi');
+    await mem.remember('Giorgio writes code in NestJS');
+
+    const top = mem.entities();
+    expect(top[0]).toEqual({ name: 'Giorgio', count: 2 });
+
+    const card = mem.entity('giorgio'); // case-insensitive lookup
+    expect(card).not.toBeNull();
+    expect(card!.name).toBe('Giorgio');
+    expect(card!.count).toBe(2);
+    expect(card!.coEntities.map((e) => e.name)).toEqual(
+      expect.arrayContaining(['Mario Rossi', 'NestJS']),
+    );
+  });
+
+  it('graph bonus surfaces memories that pure similarity misses', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    // "car" axis record — orthogonal to the query's "misc" axis
+    await mem.remember('Giorgio fixed the car');
+    await mem.remember('music playlist for gym');
+
+    // query has zero cosine with both, but shares entity "Giorgio" with the first
+    const hits = await mem.recall('any updates from Giorgio?');
+    expect(hits).toHaveLength(1);
+    expect(hits[0]!.text).toBe('Giorgio fixed the car');
+    expect(hits[0]!.sharedEntities).toEqual(['Giorgio']);
+    expect(hits[0]!.similarity).toBe(0);
+    expect(hits[0]!.score).toBeCloseTo(0.1, 5);
+
+    // graph disabled → nothing surfaces
+    const noGraph = await mem.recall('any updates from Giorgio?', { graph: false });
+    expect(noGraph).toHaveLength(0);
+  });
+
+  it('respects explicit entities and extractor: false', async () => {
+    const mem = await Memory.open(':memory:', {
+      embedder: fakeEmbedder,
+      extractor: false,
+    });
+    await mem.remember('Giorgio fixed the car');
+    expect(mem.entities()).toHaveLength(0);
+
+    const mem2 = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    await mem2.remember('some coffee note', { entities: ['Lavazza'] });
+    expect(mem2.entity('Lavazza')!.count).toBe(1);
+  });
+
+  it('persists entities and unindexes on forget', async () => {
+    const path = await tmpFile();
+    const mem = await Memory.open(path, { embedder: fakeEmbedder });
+    const id = await mem.remember('Giorgio fixed the car');
+    await mem.remember('Giorgio drinks coffee');
+    await mem.close();
+
+    const reopened = await Memory.open(path, { embedder: fakeEmbedder });
+    expect(reopened.entity('Giorgio')!.count).toBe(2);
+
+    await reopened.forget(id);
+    expect(reopened.entity('Giorgio')!.count).toBe(1);
+  });
+});

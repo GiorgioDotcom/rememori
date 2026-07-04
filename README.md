@@ -46,16 +46,32 @@ await mem.forget(hits[0].id);
 
 Three verbs. That's the API.
 
+### Entity graph
+
+Every memory is linked to the named entities it mentions (bipartite memory↔entity graph). Extraction is pluggable: the zero-dependency default spots capitalized names; plug an LLM-backed extractor for quality, or pass `extractor: false` to opt out.
+
+```ts
+// recall is hybrid by default: memories sharing entities with the query
+// get a score bonus, so graph-linked memories surface even when
+// embedding similarity alone would miss them
+const hits = await mem.recall('any updates from Giorgio?');
+hits[0].sharedEntities; // ['Giorgio']
+
+// explore the graph
+mem.entities();        // top entities by linked memories
+mem.entity('Giorgio'); // linked memories + co-occurring entities
+```
+
 ## Design
 
 - **Embedder is an interface, never bundled.** Bring Ollama (local, private), any OpenAI-compatible endpoint, or your own `(texts) => Float32Array[]` function.
 - **Storage is an adapter.** Append-only JSONL file with tombstones and compaction on Node/Bun, `:memory:` for tests. IndexedDB (browser) and KV (edge) adapters are on the roadmap.
-- **Recall scoring:** `cosine × importance × 0.5^(age/halfLife)`. Recency and importance are first-class, not an afterthought.
+- **Recall scoring:** `(cosine + entityBonus) × importance × 0.5^(age/halfLife)` where `entityBonus = min(0.3, 0.1 × shared entities)`. Recency, importance and the graph are first-class, not an afterthought.
 - **Brute-force search over contiguous `Float32Array`s.** Agent memory is thousands of records, not billions — exact search stays fast far beyond that (HNSW planned for when it isn't).
 
 ## Roadmap
 
-- v0.2 — entity graph (bipartite memory↔entity) + hybrid recall
+- ~~v0.2 — entity graph (bipartite memory↔entity) + hybrid recall~~ ✅ shipped
 - v0.3 — browser support: IndexedDB storage + transformers.js recipe (fully local semantic memory in the browser)
 - v0.4 — pure-TS HNSW index
 - v0.5 — consolidation/forgetting policies, MCP server wrapper, LongMemEval harness

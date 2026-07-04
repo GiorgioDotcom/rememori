@@ -7,6 +7,8 @@ interface AppendLine {
   /** base64-encoded Float32Array */
   vector: string;
   tags: string[];
+  /** Absent in pre-0.2 files; loader defaults to []. */
+  entities?: string[];
   importance: number;
   meta: Record<string, unknown>;
   createdAt: number;
@@ -63,6 +65,7 @@ export class FileStorage implements StorageAdapter {
           text: parsed.text,
           vector: decodeVector(parsed.vector),
           tags: parsed.tags,
+          entities: parsed.entities ?? [],
           importance: parsed.importance,
           meta: parsed.meta,
           createdAt: parsed.createdAt,
@@ -79,6 +82,7 @@ export class FileStorage implements StorageAdapter {
       text: record.text,
       vector: encodeVector(record.vector),
       tags: record.tags,
+      entities: record.entities,
       importance: record.importance,
       meta: record.meta,
       createdAt: record.createdAt,
@@ -102,6 +106,7 @@ export class FileStorage implements StorageAdapter {
         text: record.text,
         vector: encodeVector(record.vector),
         tags: record.tags,
+        entities: record.entities,
         importance: record.importance,
         meta: record.meta,
         createdAt: record.createdAt,

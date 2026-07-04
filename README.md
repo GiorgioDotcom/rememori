@@ -1,5 +1,9 @@
 # rememori
 
+[![npm](https://img.shields.io/npm/v/rememori)](https://www.npmjs.com/package/rememori)
+[![license](https://img.shields.io/npm/l/rememori)](./LICENSE)
+![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
+
 > Agent memory that runs anywhere JavaScript runs.
 
 Pure TypeScript. **Zero runtime dependencies.** No native bindings, no compiler toolchain, no database server. One file on disk. Works in Node, Bun — and soon browsers and edge runtimes.

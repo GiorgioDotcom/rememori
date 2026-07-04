@@ -31,23 +31,40 @@
   <ol id="results"></ol>
 
   <script type="module">
-    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/+esm';
-    import { Memory } from 'https://esm.sh/rememori@0.3.0';
-
     const status = document.getElementById('status');
     const rememberEl = document.getElementById('remember');
     const recallEl = document.getElementById('recall');
     const resultsEl = document.getElementById('results');
 
-    const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-    const embedder = {
-      async embed(texts) {
-        const out = await extractor(texts, { pooling: 'mean', normalize: true });
-        return out.tolist().map((v) => new Float32Array(v));
-      },
-    };
+    let mem;
+    try {
+      const [{ pipeline }, { Memory }] = await Promise.all([
+        import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/+esm'),
+        // dist is dependency-free ESM, so the raw file works from any CDN
+        import('https://cdn.jsdelivr.net/npm/rememori@0.3.0/dist/index.js'),
+      ]);
 
-    const mem = await Memory.open('idb://demo', { embedder });
+      const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
+        progress_callback: (p) => {
+          if (p.status === 'progress' && p.file?.endsWith('.onnx')) {
+            status.textContent = `Downloading model… ${Math.round(p.progress)}%`;
+          }
+        },
+      });
+      const embedder = {
+        async embed(texts) {
+          const out = await extractor(texts, { pooling: 'mean', normalize: true });
+          return out.tolist().map((v) => new Float32Array(v));
+        },
+      };
+
+      mem = await Memory.open('idb://demo', { embedder });
+    } catch (err) {
+      status.textContent = `Failed to load: ${err?.message ?? err}`;
+      status.style.color = '#c00';
+      throw err;
+    }
+
     status.textContent = `Ready — ${mem.size} memories stored in IndexedDB.`;
     rememberEl.disabled = recallEl.disabled = false;
 

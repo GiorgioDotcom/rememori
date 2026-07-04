@@ -1,6 +1,7 @@
 export { Memory } from './memory.js';
 export { InMemoryStorage } from './storage/memory.js';
 export { FileStorage } from './storage/file.js';
+export { IndexedDBStorage } from './storage/indexeddb.js';
 export { normalize, dot } from './similarity.js';
 export { heuristicExtractor } from './extract.js';
 export type {

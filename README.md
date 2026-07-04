@@ -62,17 +62,39 @@ mem.entities();        // top entities by linked memories
 mem.entity('Giorgio'); // linked memories + co-occurring entities
 ```
 
+### In the browser — no server at all
+
+Storage works on IndexedDB out of the box (`idb://` paths), and [transformers.js](https://github.com/huggingface/transformers.js) gives you local embeddings. Fully private semantic memory, nothing leaves the machine:
+
+```ts
+import { pipeline } from '@huggingface/transformers';
+import { Memory } from 'rememori';
+
+const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+const mem = await Memory.open('idb://agent', {
+  embedder: {
+    async embed(texts) {
+      const out = await extractor(texts, { pooling: 'mean', normalize: true });
+      return out.tolist().map((v) => new Float32Array(v));
+    },
+  },
+});
+```
+
+Runnable single-file demo: [`examples/browser-demo.html`](./examples/browser-demo.html).
+
 ## Design
 
 - **Embedder is an interface, never bundled.** Bring Ollama (local, private), any OpenAI-compatible endpoint, or your own `(texts) => Float32Array[]` function.
-- **Storage is an adapter.** Append-only JSONL file with tombstones and compaction on Node/Bun, `:memory:` for tests. IndexedDB (browser) and KV (edge) adapters are on the roadmap.
+- **Storage is an adapter.** Append-only JSONL file with tombstones and compaction on Node/Bun, IndexedDB in the browser (`idb://name`), `:memory:` for tests. KV (edge) adapter is on the roadmap.
 - **Recall scoring:** `(cosine + entityBonus) × importance × 0.5^(age/halfLife)` where `entityBonus = min(0.3, 0.1 × shared entities)`. Recency, importance and the graph are first-class, not an afterthought.
 - **Brute-force search over contiguous `Float32Array`s.** Agent memory is thousands of records, not billions — exact search stays fast far beyond that (HNSW planned for when it isn't).
 
 ## Roadmap
 
 - ~~v0.2 — entity graph (bipartite memory↔entity) + hybrid recall~~ ✅ shipped
-- v0.3 — browser support: IndexedDB storage + transformers.js recipe (fully local semantic memory in the browser)
+- ~~v0.3 — browser support: IndexedDB storage + transformers.js recipe~~ ✅ shipped
 - v0.4 — pure-TS HNSW index
 - v0.5 — consolidation/forgetting policies, MCP server wrapper, LongMemEval harness
 

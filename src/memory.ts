@@ -14,6 +14,7 @@ import { dot, normalize } from './similarity.js';
 import { parseDuration, toEpochMs } from './duration.js';
 import { heuristicExtractor } from './extract.js';
 import { FileStorage } from './storage/file.js';
+import { IndexedDBStorage } from './storage/indexeddb.js';
 import { InMemoryStorage } from './storage/memory.js';
 
 const DAY_MS = 86_400_000;
@@ -36,11 +37,11 @@ export class Memory {
 
   /**
    * Open a memory store.
-   * `path` = file path (Node/Bun) or ":memory:" for volatile storage.
+   * `path` = file path (Node/Bun), "idb://name" (browser IndexedDB),
+   * or ":memory:" for volatile storage.
    */
   static async open(path: string, options: MemoryOptions): Promise<Memory> {
-    const storage =
-      options.storage ?? (path === ':memory:' ? new InMemoryStorage() : new FileStorage(path));
+    const storage = options.storage ?? defaultStorage(path);
     const extractor = options.extractor === false ? null : (options.extractor ?? heuristicExtractor);
     const memory = new Memory(options.embedder, storage, extractor);
     memory.records = await storage.load();
@@ -253,6 +254,12 @@ export class Memory {
       }
     }
   }
+}
+
+function defaultStorage(path: string) {
+  if (path === ':memory:') return new InMemoryStorage();
+  if (path.startsWith('idb://')) return new IndexedDBStorage(path.slice('idb://'.length));
+  return new FileStorage(path);
 }
 
 function clamp01(n: number): number {

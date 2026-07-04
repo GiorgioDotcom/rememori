@@ -16,7 +16,7 @@ export function ollama(model: string, options: OllamaEmbedderOptions = {}): Embe
         body: JSON.stringify({ model, input: texts }),
       });
       if (!res.ok) {
-        throw new Error(`memoro: ollama embed failed (${res.status} ${await res.text()})`);
+        throw new Error(`rememori: ollama embed failed (${res.status} ${await res.text()})`);
       }
       const data = (await res.json()) as { embeddings: number[][] };
       return data.embeddings.map((e) => new Float32Array(e));
@@ -44,7 +44,7 @@ export function openai(model: string, options: OpenAIEmbedderOptions): Embedder 
         body: JSON.stringify({ model, input: texts }),
       });
       if (!res.ok) {
-        throw new Error(`memoro: openai embed failed (${res.status} ${await res.text()})`);
+        throw new Error(`rememori: openai embed failed (${res.status} ${await res.text()})`);
       }
       const data = (await res.json()) as { data: { index: number; embedding: number[] }[] };
       return data.data

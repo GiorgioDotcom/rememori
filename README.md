@@ -1,4 +1,4 @@
-# memoro
+# rememori
 
 > Agent memory that runs anywhere JavaScript runs.
 
@@ -10,17 +10,17 @@ Pure TypeScript. **Zero runtime dependencies.** No native bindings, no compiler 
 
 Every AI agent forgets everything when the session ends. Fixing that today means wiring up a vector database, an embedding pipeline, and a retrieval layer — or adopting a memory *platform* with servers, backends, and cloud tiers.
 
-memoro is not a platform. It's a primitive — the SQLite of agent memory:
+rememori is not a platform. It's a primitive — the SQLite of agent memory:
 
 ```bash
-npm install memoro
+npm install rememori
 ```
 
 ```ts
-import { Memory } from 'memoro';
-import { ollama } from 'memoro/embedders';
+import { Memory } from 'rememori';
+import { ollama } from 'rememori/embedders';
 
-const mem = await Memory.open('./agent.memoro', {
+const mem = await Memory.open('./agent.rememori', {
   embedder: ollama('nomic-embed-text'),
 });
 
@@ -58,7 +58,7 @@ Three verbs. That's the API.
 
 ## Non-goals
 
-Multi-user servers, auth, cloud sync, multimodal ingestion, LLM-managed memory. If you need a full memory platform with document pipelines and graph databases, use [Cognee](https://github.com/topoteretes/cognee) or [Mem0](https://github.com/mem0ai/mem0) — they're good at that. memoro is for when you want memory *inside* your process, in five minutes.
+Multi-user servers, auth, cloud sync, multimodal ingestion, LLM-managed memory. If you need a full memory platform with document pipelines and graph databases, use [Cognee](https://github.com/topoteretes/cognee) or [Mem0](https://github.com/mem0ai/mem0) — they're good at that. rememori is for when you want memory *inside* your process, in five minutes.
 
 ## License
 

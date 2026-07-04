@@ -39,9 +39,9 @@ export class Memory {
 
   /** Store a memory. Returns its id. */
   async remember(text: string, options: RememberOptions = {}): Promise<string> {
-    if (!text.trim()) throw new Error('memoro: cannot remember empty text');
+    if (!text.trim()) throw new Error('rememori: cannot remember empty text');
     const [vector] = await this.embedder.embed([text]);
-    if (!vector) throw new Error('memoro: embedder returned no vector');
+    if (!vector) throw new Error('rememori: embedder returned no vector');
     const record: MemoryRecord = {
       id: crypto.randomUUID(),
       text,
@@ -60,7 +60,7 @@ export class Memory {
   /** Semantic recall: cosine similarity × importance × optional temporal decay. */
   async recall(query: string, options: RecallOptions = {}): Promise<RecallHit[]> {
     const [queryVec] = await this.embedder.embed([query]);
-    if (!queryVec) throw new Error('memoro: embedder returned no vector');
+    if (!queryVec) throw new Error('rememori: embedder returned no vector');
     normalize(queryVec);
 
     const limit = options.limit ?? 10;

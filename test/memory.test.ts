@@ -35,9 +35,9 @@ afterEach(async () => {
 });
 
 async function tmpFile(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'memoro-'));
+  const dir = await mkdtemp(join(tmpdir(), 'rememori-'));
   cleanups.push(dir);
-  return join(dir, 'test.memoro');
+  return join(dir, 'test.rememori');
 }
 
 describe('Memory', () => {

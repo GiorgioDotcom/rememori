@@ -1,5 +1,5 @@
 {
-  "name": "memoro",
+  "name": "rememori",
   "version": "0.0.1",
   "description": "Agent memory that runs anywhere JavaScript runs. Pure TypeScript, zero dependencies, embedded.",
   "keywords": [
@@ -17,7 +17,7 @@
   "author": "Giorgio Giaffreda",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/giorgiogiaf/memoro.git"
+    "url": "git+https://github.com/giorgiogiaf/rememori.git"
   },
   "type": "module",
   "engines": {

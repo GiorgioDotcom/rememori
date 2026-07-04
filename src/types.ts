@@ -58,7 +58,7 @@ export interface PruneOptions {
   belowImportance?: number;
 }
 
-/** Turns texts into embedding vectors. The only external capability memoro needs. */
+/** Turns texts into embedding vectors. The only external capability rememori needs. */
 export interface Embedder {
   embed(texts: string[]): Promise<Float32Array[]>;
 }

@@ -105,10 +105,10 @@
         <p class="demo-status" id="demo-status" role="status">Ready.</p>
         <label class="demo-label" for="demo-remember">Remember something</label>
         <input id="demo-remember" type="text" autocomplete="off"
-               placeholder="The GT86 needs new spark plugs at 40k miles" />
+               placeholder="Staging deploys fail when the Redis cache is cold" />
         <label class="demo-label" for="demo-recall">Ask your memory</label>
         <input id="demo-recall" type="text" autocomplete="off"
-               placeholder="what maintenance does the car need?" />
+               placeholder="what do I know about deploys?" />
         <ol class="demo-results" id="demo-results" aria-live="polite"></ol>
       </div>
     </div>
@@ -168,6 +168,45 @@
     <p class="anywhere-note measure">Native-binding memory engines compile per
     platform and stop at the browser's edge. Pure TypeScript ships everywhere
     the language does — this very page is the existence proof.</p>
+  </section>
+
+  <!-- ================= USE CASES ================= -->
+  <section class="cases">
+    <h2 class="measure">What would you build?</h2>
+    <div class="cases-grid">
+      <div class="case">
+        <h3>A support bot that remembers the customer</h3>
+        <p>Last ticket, preferred tone, the promise a colleague made two weeks
+        ago. <code>remember()</code> every message, <code>recall()</code> before
+        replying. Telegram, Discord, Slack — three lines each.</p>
+      </div>
+      <div class="case">
+        <h3>A coding agent with cross-session memory</h3>
+        <p>Decisions, conventions, “we already tried that”. One
+        <code>.mem</code> file next to the repo, versionable and greppable.</p>
+      </div>
+      <div class="case">
+        <h3>A local-first app with semantic search</h3>
+        <p>Electron or Tauri note-taking, mail, research tools: recall by
+        meaning without shipping your users' data to a server.</p>
+      </div>
+      <div class="case">
+        <h3>Assistants under compliance</h3>
+        <p>Legal, health, finance. Memory that provably never leaves the
+        device: IndexedDB storage plus local embeddings, auditable in the
+        Network tab.</p>
+      </div>
+      <div class="case">
+        <h3>A home-automation brain on a Raspberry Pi</h3>
+        <p>“Boiler serviced in March, technician was Rossi.” Nobody wants to
+        run Postgres on a Pi.</p>
+      </div>
+      <div class="case">
+        <h3>NPCs that hold a grudge</h3>
+        <p>Game characters that remember the player across saves — in-process,
+        inside the game loop, zero infrastructure.</p>
+      </div>
+    </div>
   </section>
 
   <!-- ================= HONESTY ================= -->

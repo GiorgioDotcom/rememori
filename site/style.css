@@ -375,6 +375,28 @@ a:hover { color: var(--ink); }
 
 .anywhere-note { color: var(--muted); }
 
+/* ---------- use cases ---------- */
+
+.cases { padding: var(--sect) clamp(var(--s-4), 5vw, var(--s-12)); }
+
+.cases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--s-8) clamp(var(--s-8), 5vw, var(--s-16));
+  max-width: 72rem;
+  margin-top: var(--s-12);
+}
+
+.case { border-top: 1px solid var(--line); padding-top: var(--s-6); }
+.case h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--s-3);
+}
+.case p { color: var(--muted); font-size: 0.98rem; margin: 0; }
+.case code { font-family: var(--mono); font-size: 0.9em; color: var(--brand); }
+
 /* ---------- notfor ---------- */
 
 .notfor {

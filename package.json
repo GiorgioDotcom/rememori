@@ -1,0 +1,60 @@
+{
+  "name": "memoro",
+  "version": "0.0.1",
+  "description": "Agent memory that runs anywhere JavaScript runs. Pure TypeScript, zero dependencies, embedded.",
+  "keywords": [
+    "ai",
+    "agent",
+    "memory",
+    "vector",
+    "embeddings",
+    "rag",
+    "recall",
+    "local-first",
+    "embedded"
+  ],
+  "license": "MIT",
+  "author": "Giorgio Giaffreda",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/giorgiogiaf/memoro.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./embedders": {
+      "types": "./dist/embedders/index.d.ts",
+      "import": "./dist/embedders/index.js",
+      "require": "./dist/embedders/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^3.0.0"
+  }
+}

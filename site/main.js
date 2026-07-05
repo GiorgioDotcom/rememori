@@ -64,10 +64,10 @@ if (canvas && !reduced) {
   resize();
   addEventListener('resize', resize);
 
-  /* pointer: nodes near the cursor drift away, gently */
+  /* pointer: nearby memories drift TOWARD the cursor — recall gathers */
   const mouse = { x: -1e4, y: -1e4 };
-  const REACH = 150;
-  const MAX_V = 0.9;
+  const REACH = 170;
+  const MAX_V = 0.8;
   addEventListener('pointermove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
   addEventListener('pointerleave', () => { mouse.x = -1e4; mouse.y = -1e4; });
 
@@ -83,12 +83,13 @@ if (canvas && !reduced) {
     ctx.clearRect(0, 0, w, h);
 
     for (const n of nodes) {
-      const dx = n.x - mouse.x, dy = n.y - mouse.y;
+      const dx = mouse.x - n.x, dy = mouse.y - n.y;
       const d = Math.hypot(dx, dy);
-      if (d < REACH && d > 0.5) {
-        const push = ((REACH - d) / REACH) * 0.045;
-        n.vx += (dx / d) * push;
-        n.vy += (dy / d) * push;
+      /* gather toward the cursor, but never collapse onto it: inside 36px the pull stops */
+      if (d < REACH && d > 36) {
+        const pull = ((REACH - d) / REACH) * 0.035;
+        n.vx += (dx / d) * pull;
+        n.vy += (dy / d) * pull;
       }
       /* cap speed, add gentle friction so nudges settle back to drift */
       const speed = Math.hypot(n.vx, n.vy);
@@ -105,7 +106,7 @@ if (canvas && !reduced) {
         const dx = a.x - b.x, dy = a.y - b.y;
         const d = Math.hypot(dx, dy);
         if (d < LINK) {
-          ctx.strokeStyle = `oklch(0.50 0.13 285 / ${(0.4 * (1 - d / LINK)).toFixed(3)})`;
+          ctx.strokeStyle = `oklch(0.62 0.13 150 / ${(0.35 * (1 - d / LINK)).toFixed(3)})`;
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
@@ -114,13 +115,24 @@ if (canvas && !reduced) {
         }
       }
     }
-    for (const n of nodes) {
-      ctx.fillStyle = 'oklch(0.74 0.17 285 / 0.55)';
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    /* nodes are tiny five-point stars — la verda stelo */
+    ctx.fillStyle = 'oklch(0.55 0.16 150 / 0.6)';
+    for (const n of nodes) drawStar(ctx, n.x, n.y, n.r * 2.4);
     requestAnimationFrame(tick);
+  }
+
+  function drawStar(c, x, y, R) {
+    const r = R * 0.382;
+    c.beginPath();
+    for (let k = 0; k < 5; k++) {
+      const ao = (-90 + k * 72) * Math.PI / 180;
+      const ai = (-54 + k * 72) * Math.PI / 180;
+      if (k === 0) c.moveTo(x + R * Math.cos(ao), y + R * Math.sin(ao));
+      else c.lineTo(x + R * Math.cos(ao), y + R * Math.sin(ao));
+      c.lineTo(x + r * Math.cos(ai), y + r * Math.sin(ai));
+    }
+    c.closePath();
+    c.fill();
   }
   requestAnimationFrame(tick);
 }

@@ -9,7 +9,7 @@
   <meta property="og:description" content="Agent memory that runs anywhere JavaScript runs. Pure TypeScript, zero dependencies, embedded." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://rememori.dev" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-100 -100 200 200'%3E%3Cpath d='M0 -100 L22.45 -30.9 L95.11 -30.9 L36.33 11.8 L58.78 80.9 L0 38.2 L-58.78 80.9 L-36.33 11.8 L-95.11 -30.9 L-22.45 -30.9 Z' fill='%23159957'/%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-100 -100 200 200'%3E%3Cg stroke='%23159957' stroke-width='14' stroke-linecap='round'%3E%3Cline x1='0' y1='0' x2='0' y2='-72'/%3E%3Cline x1='0' y1='0' x2='68.5' y2='-22.3'/%3E%3Cline x1='0' y1='0' x2='42.3' y2='58.3'/%3E%3Cline x1='0' y1='0' x2='-42.3' y2='58.3'/%3E%3Cline x1='0' y1='0' x2='-68.5' y2='-22.3'/%3E%3C/g%3E%3Cg fill='%23159957'%3E%3Ccircle cx='0' cy='0' r='22'/%3E%3Ccircle cx='0' cy='-72' r='18'/%3E%3Ccircle cx='68.5' cy='-22.3' r='18'/%3E%3Ccircle cx='42.3' cy='58.3' r='18'/%3E%3Ccircle cx='-42.3' cy='58.3' r='18'/%3E%3Ccircle cx='-68.5' cy='-22.3' r='18'/%3E%3C/g%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&display=swap" />
   <link rel="stylesheet" href="style.css" />
@@ -20,7 +20,19 @@
 
 <svg style="display:none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
   <symbol id="stelo" viewBox="-100 -100 200 200">
-    <path d="M0 -100 L22.45 -30.9 L95.11 -30.9 L36.33 11.8 L58.78 80.9 L0 38.2 L-58.78 80.9 L-36.33 11.8 L-95.11 -30.9 L-22.45 -30.9 Z"/>
+    <g stroke="currentColor" stroke-width="11" stroke-linecap="round">
+      <line x1="0" y1="0" x2="0" y2="-72"/>
+      <line x1="0" y1="0" x2="68.5" y2="-22.3"/>
+      <line x1="0" y1="0" x2="42.3" y2="58.3"/>
+      <line x1="0" y1="0" x2="-42.3" y2="58.3"/>
+      <line x1="0" y1="0" x2="-68.5" y2="-22.3"/>
+    </g>
+    <circle cx="0" cy="0" r="19"/>
+    <circle cx="0" cy="-72" r="15"/>
+    <circle cx="68.5" cy="-22.3" r="15"/>
+    <circle cx="42.3" cy="58.3" r="15"/>
+    <circle cx="-42.3" cy="58.3" r="15"/>
+    <circle cx="-68.5" cy="-22.3" r="15"/>
   </symbol>
 </svg>
 
@@ -37,7 +49,21 @@
 
   <!-- ================= HERO ================= -->
   <section class="hero">
-    <svg class="hero-stelo" viewBox="-100 -100 200 200" aria-hidden="true"><use href="#stelo"/></svg>
+    <svg class="hero-stelo" viewBox="-100 -100 200 200" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="1.2">
+        <line x1="0" y1="0" x2="0" y2="-72"/>
+        <line x1="0" y1="0" x2="68.5" y2="-22.3"/>
+        <line x1="0" y1="0" x2="42.3" y2="58.3"/>
+        <line x1="0" y1="0" x2="-42.3" y2="58.3"/>
+        <line x1="0" y1="0" x2="-68.5" y2="-22.3"/>
+        <circle cx="0" cy="0" r="19"/>
+        <circle cx="0" cy="-72" r="15"/>
+        <circle cx="68.5" cy="-22.3" r="15"/>
+        <circle cx="42.3" cy="58.3" r="15"/>
+        <circle cx="-42.3" cy="58.3" r="15"/>
+        <circle cx="-68.5" cy="-22.3" r="15"/>
+      </g>
+    </svg>
     <div class="hero-inner">
       <h1><span class="l1">Your agent forgets.</span> <span class="l2">Give it memory.</span></h1>
       <p class="lede">rememori is an embedded memory engine in pure TypeScript.

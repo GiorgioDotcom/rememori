@@ -96,7 +96,7 @@ a:hover { color: var(--ink); }
   font-weight: 800; font-size: 1.15rem; letter-spacing: -0.01em;
   color: var(--ink); text-decoration: none;
 }
-.wordmark .stelo { width: 1em; height: 1em; fill: var(--verda); }
+.wordmark .stelo { width: 1em; height: 1em; fill: var(--verda); color: var(--verda); }
 .wordmark:hover { color: var(--verda-deep); }
 
 .top nav { display: flex; gap: var(--s-6); }
@@ -120,8 +120,8 @@ a:hover { color: var(--ink); }
 .hero-stelo {
   position: absolute;
   width: min(74vmin, 40rem); height: min(74vmin, 40rem);
-  fill: none; stroke: var(--verda); stroke-width: 0.6;
-  opacity: 0.14;
+  color: var(--verda);
+  opacity: 0.16;
   animation: turn 240s linear infinite;
 }
 @keyframes turn { to { transform: rotate(360deg); } }
@@ -477,7 +477,7 @@ a:hover { color: var(--ink); }
   display: inline-flex; align-items: center; gap: 0.5em;
   font-weight: 800; font-size: 1.1rem; margin: 0;
 }
-.foot-brand .stelo { width: 1em; height: 1em; fill: var(--verda); }
+.foot-brand .stelo { width: 1em; height: 1em; fill: var(--verda); color: var(--verda); }
 .foot nav { display: flex; gap: var(--s-6); justify-content: center; }
 .foot nav a { color: var(--muted); text-decoration: none; }
 .foot nav a:hover { color: var(--verda-deep); }

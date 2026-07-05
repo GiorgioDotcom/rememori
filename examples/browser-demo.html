@@ -12,18 +12,48 @@
 <head>
   <meta charset="utf-8" />
   <title>rememori — memory in your browser</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-100 -100 200 200'%3E%3Cpath d='M0 -100 L22.45 -30.9 L95.11 -30.9 L36.33 11.8 L58.78 80.9 L0 38.2 L-58.78 80.9 L-36.33 11.8 L-95.11 -30.9 L-22.45 -30.9 Z' fill='%23159957'/%3E%3C/svg%3E" />
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 3rem auto; padding: 0 1rem; }
+    /* Verda Stelo — matches rememori.dev */
+    :root {
+      --bg: oklch(1 0 0);
+      --ink: oklch(0.20 0.02 150);
+      --muted: oklch(0.44 0.02 150);
+      --line: oklch(0.885 0.012 150);
+      --verda: oklch(0.55 0.16 150);
+      --verda-deep: oklch(0.42 0.14 150);
+      --verda-wash: oklch(0.95 0.025 150);
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg); color: var(--ink);
+      max-width: 640px; margin: 3rem auto; padding: 0 1rem;
+      line-height: 1.6;
+    }
+    h1 {
+      display: flex; align-items: center; gap: .45em;
+      font-weight: 800; letter-spacing: -0.02em;
+    }
+    h1 svg { width: .9em; height: .9em; fill: var(--verda); }
     input, button { font: inherit; padding: .5rem .75rem; }
-    input { width: 100%; box-sizing: border-box; margin-bottom: .5rem; }
+    input {
+      width: 100%; box-sizing: border-box; margin-bottom: .5rem;
+      color: var(--ink); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 8px;
+    }
+    input:focus { border-color: var(--verda); outline: none; box-shadow: 0 0 0 3px var(--verda-wash); }
+    input::placeholder { color: oklch(0.52 0.015 150); }
+    ol { padding-left: 1.2rem; }
     li { margin: .35rem 0; }
-    .score { color: #888; font-size: .85em; }
-    #status { color: #888; }
+    .score { color: var(--verda-deep); font-family: var(--mono); font-size: .85em; }
+    #status { color: var(--muted); font-family: var(--mono); font-size: .9em; }
+    a { color: var(--verda-deep); }
   </style>
 </head>
 <body>
-  <h1>rememori</h1>
-  <p>Semantic memory, 100% in your browser. No server. Check the Network tab.</p>
+  <h1><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d="M0 -100 L22.45 -30.9 L95.11 -30.9 L36.33 11.8 L58.78 80.9 L0 38.2 L-58.78 80.9 L-36.33 11.8 L-95.11 -30.9 L-22.45 -30.9 Z"/></svg>rememori</h1>
+  <p>Semantic memory, 100% in your browser. No server. Check the Network tab. <a href="https://rememori.dev">rememori.dev</a></p>
   <p id="status">Loading embedding model (first visit downloads ~30 MB, then cached)…</p>
 
   <input id="remember" placeholder="Remember something… (Enter)" disabled />

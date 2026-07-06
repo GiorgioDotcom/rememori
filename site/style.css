@@ -350,6 +350,22 @@ a:hover { color: var(--ink); }
 .demo-results .score { font-family: var(--mono); color: var(--verda-deep); white-space: nowrap; }
 .demo-results .none { color: var(--muted); border-style: dashed; }
 
+/* ---------- mcp ---------- */
+
+.mcp {
+  padding: var(--sect) clamp(var(--s-4), 5vw, var(--s-12));
+  border-top: 1px solid var(--line);
+}
+.mcp .measure { margin-inline: auto; text-align: center; }
+.mcp p { color: var(--muted); }
+.mcp .install { margin-top: var(--s-4); max-width: 100%; }
+.mcp .install code { font-size: clamp(0.78rem, 2.2vw, 1rem); white-space: nowrap; }
+
+@media (max-width: 480px) {
+  .mcp .install { flex-wrap: wrap; justify-content: center; }
+  .mcp .install code { white-space: normal; word-break: keep-all; }
+}
+
 /* ---------- graph ---------- */
 
 .graph {

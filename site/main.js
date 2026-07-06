@@ -6,16 +6,17 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- copy install command ---------- */
 
-const copyBtn = document.getElementById('copy');
-copyBtn?.addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText('npm install rememori');
-    copyBtn.textContent = 'copied';
-    setTimeout(() => (copyBtn.textContent = 'copy'), 1500);
-  } catch {
-    copyBtn.textContent = 'ctrl+c?';
-  }
-});
+for (const btn of document.querySelectorAll('[data-copy]')) {
+  btn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(btn.dataset.copy);
+      btn.textContent = 'copied';
+      setTimeout(() => (btn.textContent = 'copy'), 1500);
+    } catch {
+      btn.textContent = 'ctrl+c?';
+    }
+  });
+}
 
 /* ---------- scroll-triggered reveals (code block, graph) ---------- */
 

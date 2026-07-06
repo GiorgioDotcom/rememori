@@ -71,7 +71,7 @@
       One file on disk — or IndexedDB in the browser.</p>
       <div class="install" role="group" aria-label="Install command">
         <code>npm install rememori</code>
-        <button id="copy" type="button" aria-label="Copy install command">copy</button>
+        <button type="button" data-copy="npm install rememori" aria-label="Copy install command">copy</button>
       </div>
       <p class="facts">v0.3.0 &nbsp;·&nbsp; 0 dependencies &nbsp;·&nbsp; ~8 kB core &nbsp;·&nbsp; MIT</p>
       <p class="etymology">rememori — Esperanto for “to remember”. A language built to run anywhere. Same idea.</p>
@@ -147,6 +147,21 @@
         <input id="demo-recall" type="text" autocomplete="off"
                placeholder="what do I know about deploys?" />
         <ol class="demo-results" id="demo-results" aria-live="polite"></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MCP ================= -->
+  <section class="mcp">
+    <div class="measure">
+      <h2>Give your agent a memory. Now.</h2>
+      <p>rememori ships as an <a href="https://github.com/GiorgioDotcom/rememori/tree/main/mcp">MCP server</a>.
+      One command gives Claude Code — or Cursor, Windsurf, any MCP client —
+      persistent memory across sessions. Embeddings run locally via Ollama;
+      memories live in one file on your disk.</p>
+      <div class="install" role="group" aria-label="MCP install command">
+        <code>claude mcp add rememori -- npx -y rememori-mcp</code>
+        <button type="button" data-copy="claude mcp add rememori -- npx -y rememori-mcp" aria-label="Copy MCP command">copy</button>
       </div>
     </div>
   </section>

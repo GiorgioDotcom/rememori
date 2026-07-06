@@ -1,0 +1,36 @@
+{
+  "name": "rememori-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for rememori — persistent semantic memory for Claude Code and any MCP-capable agent.",
+  "keywords": ["mcp", "model-context-protocol", "ai", "agent", "memory", "rememori", "claude"],
+  "license": "MIT",
+  "author": "Giorgio Giaffreda",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GiorgioDotcom/rememori.git",
+    "directory": "mcp"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "rememori-mcp": "dist/index.js"
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --clean",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "rememori": "^0.3.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.0"
+  }
+}

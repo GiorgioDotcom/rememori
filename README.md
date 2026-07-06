@@ -91,12 +91,21 @@ Runnable single-file demo: [`examples/browser-demo.html`](./examples/browser-dem
 - **Recall scoring:** `(cosine + entityBonus) × importance × 0.5^(age/halfLife)` where `entityBonus = min(0.3, 0.1 × shared entities)`. Recency, importance and the graph are first-class, not an afterthought.
 - **Brute-force search over contiguous `Float32Array`s.** Agent memory is thousands of records, not billions — exact search stays fast far beyond that (HNSW planned for when it isn't).
 
+### MCP server — memory for Claude Code
+
+[`rememori-mcp`](./mcp) wraps the engine as a Model Context Protocol server. One command gives Claude Code (or any MCP client) persistent semantic memory across sessions:
+
+```bash
+claude mcp add rememori -- npx -y rememori-mcp
+```
+
 ## Roadmap
 
 - ~~v0.2 — entity graph (bipartite memory↔entity) + hybrid recall~~ ✅ shipped
 - ~~v0.3 — browser support: IndexedDB storage + transformers.js recipe~~ ✅ shipped
+- ~~MCP server wrapper~~ ✅ shipped as [`rememori-mcp`](./mcp)
 - v0.4 — pure-TS HNSW index
-- v0.5 — consolidation/forgetting policies, MCP server wrapper, LongMemEval harness
+- v0.5 — consolidation/forgetting policies, LongMemEval harness
 
 ## Non-goals
 

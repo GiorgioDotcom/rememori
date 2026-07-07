@@ -13,6 +13,7 @@ import type {
 import { dot, normalize } from './similarity.js';
 import { parseDuration, toEpochMs } from './duration.js';
 import { heuristicExtractor } from './extract.js';
+import { HnswIndex } from './index/hnsw.js';
 import { FileStorage } from './storage/file.js';
 import { IndexedDBStorage } from './storage/indexeddb.js';
 import { InMemoryStorage } from './storage/memory.js';
@@ -20,6 +21,10 @@ import { InMemoryStorage } from './storage/memory.js';
 const DAY_MS = 86_400_000;
 const ENTITY_BONUS = 0.1;
 const ENTITY_BONUS_CAP = 0.3;
+/** below this many records, exact scan beats the index overhead */
+const HNSW_AUTO_THRESHOLD = 1000;
+/** rebuild the index when this fraction of its nodes are tombstones */
+const HNSW_REBUILD_RATIO = 0.2;
 
 export class Memory {
   private records: MemoryRecord[] = [];
@@ -29,10 +34,13 @@ export class Memory {
   /** lowercase entity -> display name (first seen) */
   private entityNames = new Map<string, string>();
 
+  private hnsw: HnswIndex | null = null;
+
   private constructor(
     private readonly embedder: Embedder,
     private readonly storage: StorageAdapter,
     private readonly extractor: EntityExtractor | null,
+    private readonly indexMode: 'auto' | 'hnsw' | 'flat',
   ) {}
 
   /**
@@ -43,7 +51,7 @@ export class Memory {
   static async open(path: string, options: MemoryOptions): Promise<Memory> {
     const storage = options.storage ?? defaultStorage(path);
     const extractor = options.extractor === false ? null : (options.extractor ?? heuristicExtractor);
-    const memory = new Memory(options.embedder, storage, extractor);
+    const memory = new Memory(options.embedder, storage, extractor, options.index ?? 'auto');
     memory.records = await storage.load();
     memory.byId = new Map(memory.records.map((r) => [r.id, r]));
     for (const record of memory.records) memory.indexEntities(record);
@@ -70,6 +78,7 @@ export class Memory {
     this.records.push(record);
     this.byId.set(record.id, record);
     this.indexEntities(record);
+    this.hnsw?.add(record.id, record.vector);
     await this.storage.append(record);
     return record.id;
   }
@@ -94,8 +103,30 @@ export class Memory {
     const before = options.before === undefined ? Infinity : toEpochMs(options.before);
     const now = Date.now();
 
+    /* Exact scan when filtered or small; HNSW candidates otherwise.
+       Entity-matched records are always unioned in, so the graph bonus
+       can surface memories the vector index alone would rank out. */
+    const filtered =
+      options.tags !== undefined || options.after !== undefined || options.before !== undefined;
+    let pool: Iterable<MemoryRecord> = this.records;
+    if (!filtered && this.ensureIndex()) {
+      const candidates = new Map<string, MemoryRecord>();
+      const k = Math.max(limit * 8, 64);
+      for (const hit of this.hnsw!.search(queryVec, k, 200)) {
+        const record = this.byId.get(hit.id);
+        if (record) candidates.set(record.id, record);
+      }
+      for (const lower of queryEntitySet) {
+        for (const id of this.entityIndex.get(lower) ?? []) {
+          const record = this.byId.get(id);
+          if (record) candidates.set(record.id, record);
+        }
+      }
+      pool = candidates.values();
+    }
+
     const hits: RecallHit[] = [];
-    for (const record of this.records) {
+    for (const record of pool) {
       if (record.createdAt < after || record.createdAt > before) continue;
       if (options.tags && !options.tags.every((t) => record.tags.includes(t))) continue;
 
@@ -136,6 +167,7 @@ export class Memory {
     this.byId.delete(id);
     this.records = this.records.filter((r) => r.id !== id);
     this.unindexEntities(record);
+    this.hnsw?.remove(id);
     await this.storage.tombstone(id);
     return true;
   }
@@ -165,9 +197,22 @@ export class Memory {
     }
     if (removed > 0) {
       this.records = keep;
+      this.hnsw = null; // rebuilt lazily on the next indexed recall
       await this.storage.compact(keep);
     }
     return removed;
+  }
+
+  /** Build/rebuild the HNSW index when the mode and size call for it. */
+  private ensureIndex(): boolean {
+    if (this.indexMode === 'flat') return false;
+    if (this.indexMode === 'auto' && this.records.length < HNSW_AUTO_THRESHOLD) return false;
+    if (this.hnsw && this.hnsw.deletedRatio > HNSW_REBUILD_RATIO) this.hnsw = null;
+    if (!this.hnsw) {
+      this.hnsw = new HnswIndex();
+      for (const record of this.records) this.hnsw.add(record.id, record.vector);
+    }
+    return true;
   }
 
   /** Graph card for one entity, or null if unknown. */

@@ -89,7 +89,19 @@ Runnable single-file demo: [`examples/browser-demo.html`](./examples/browser-dem
 - **Embedder is an interface, never bundled.** Bring Ollama (local, private), any OpenAI-compatible endpoint, or your own `(texts) => Float32Array[]` function.
 - **Storage is an adapter.** Append-only JSONL file with tombstones and compaction on Node/Bun, IndexedDB in the browser (`idb://name`), `:memory:` for tests. KV (edge) adapter is on the roadmap.
 - **Recall scoring:** `(cosine + entityBonus) × importance × 0.5^(age/halfLife)` where `entityBonus = min(0.3, 0.1 × shared entities)`. Recency, importance and the graph are first-class, not an afterthought.
-- **Brute-force search over contiguous `Float32Array`s.** Agent memory is thousands of records, not billions — exact search stays fast far beyond that (HNSW planned for when it isn't).
+- **Exact search first, HNSW when it pays.** Below ~1000 memories, an exact scan over contiguous `Float32Array`s wins on every axis. Past that, a pure-TS HNSW graph index kicks in automatically (`index: 'auto'`, the default; force with `'hnsw'` or `'flat'`). Tag/date-filtered recalls always use the exact scan.
+
+## Scale
+
+Synthetic 384-dim embeddings with realistic low-dimensional structure, Apple M-class CPU, `ef=200` (what `recall()` uses). Run it yourself: `node bench/hnsw.bench.mjs`.
+
+| memories | exact scan | HNSW | recall@10 |
+|---|---|---|---|
+| 1,000 | 0.5 ms/query | (index off — scan wins) | 100% |
+| 10,000 | 4.4 ms/query | 2.3 ms/query | 100% |
+| 50,000 | 26 ms/query | 2.8 ms/query | 100% |
+
+Index build is one-time, ~2–4 ms per memory, incremental on `remember()`. Honest caveat: uniformly random high-dimensional vectors (the worst case for *any* ANN index — distances concentrate) degrade recall; real embedding models produce structured vectors that behave like the table above.
 
 ### MCP server — memory for Claude Code
 
@@ -104,7 +116,7 @@ claude mcp add rememori -- npx -y rememori-mcp
 - ~~v0.2 — entity graph (bipartite memory↔entity) + hybrid recall~~ ✅ shipped
 - ~~v0.3 — browser support: IndexedDB storage + transformers.js recipe~~ ✅ shipped
 - ~~MCP server wrapper~~ ✅ shipped as [`rememori-mcp`](./mcp)
-- v0.4 — pure-TS HNSW index
+- ~~v0.4 — pure-TS HNSW index~~ ✅ shipped
 - v0.5 — consolidation/forgetting policies, LongMemEval harness
 
 ## Non-goals

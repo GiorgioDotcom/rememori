@@ -113,4 +113,11 @@ export interface MemoryOptions {
    * capitalization heuristic; pass `false` to disable the graph entirely.
    */
   extractor?: EntityExtractor | false;
+  /**
+   * Vector index strategy. "auto" (default) scans exhaustively until the
+   * store passes ~1000 memories, then switches to an HNSW graph index.
+   * "hnsw" forces the index at any size; "flat" always scans.
+   * Tag/date-filtered recalls always use the exact scan.
+   */
+  index?: 'auto' | 'hnsw' | 'flat';
 }

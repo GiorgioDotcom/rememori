@@ -26,6 +26,7 @@ That's it. Claude Code now has four tools: `remember`, `recall`, `forget`, `enti
 | `OPENAI_API_KEY` | — | Required for `openai` |
 | `OPENAI_MODEL` | `text-embedding-3-small` | |
 | `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Any OpenAI-compatible endpoint |
+| `REMEMORI_MIN_SIMILARITY` | `0.5` | Relevance floor: off-topic recalls return nothing instead of noise (0.5 measured for nomic; lower it if recalls come back empty too often) |
 
 Example with an OpenAI-compatible endpoint:
 

@@ -35,7 +35,10 @@ function makeEmbedder() {
 
 const path = process.env.REMEMORI_PATH ?? join(homedir(), '.rememori', 'memory.mem');
 await mkdir(dirname(path), { recursive: true });
-const mem = await Memory.open(path, { embedder: makeEmbedder() });
+/* relevance floor: off-topic recalls return nothing instead of noise.
+   0.5 measured for nomic-embed-text; override via REMEMORI_MIN_SIMILARITY. */
+const minSimilarity = Number(process.env.REMEMORI_MIN_SIMILARITY ?? 0.5);
+const mem = await Memory.open(path, { embedder: makeEmbedder(), minSimilarity });
 
 const server = new McpServer({ name: 'rememori', version: '0.1.0' });
 

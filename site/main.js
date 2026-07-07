@@ -163,7 +163,7 @@ loadBtn?.addEventListener('click', async () => {
   try {
     const [{ pipeline }, { Memory }] = await Promise.all([
       import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/+esm'),
-      import('https://cdn.jsdelivr.net/npm/rememori@0.4.0/dist/index.js'),
+      import('https://cdn.jsdelivr.net/npm/rememori@0.5.0/dist/index.js'),
     ]);
 
     const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
@@ -181,7 +181,7 @@ loadBtn?.addEventListener('click', async () => {
       },
     };
 
-    mem = await Memory.open('idb://rememori-site', { embedder });
+    mem = await Memory.open('idb://rememori-site', { embedder, minSimilarity: 0.3 });
   } catch (err) {
     setStatus(`Failed to load: ${err?.message ?? err}`, 'err');
     return;
@@ -204,7 +204,7 @@ loadBtn?.addEventListener('click', async () => {
     if (hits.length === 0) {
       const li = document.createElement('li');
       li.className = 'none';
-      li.textContent = 'nothing relevant — remember something first';
+      li.textContent = 'nothing relevant to that — and that’s the point';
       resultsEl.append(li);
       return;
     }

@@ -93,6 +93,7 @@ Runnable single-file demo: [`examples/browser-demo.html`](./examples/browser-dem
 - **Embedder is an interface, never bundled.** Bring Ollama (local, private), any OpenAI-compatible endpoint, or your own `(texts) => Float32Array[]` function.
 - **Storage is an adapter.** Append-only JSONL file with tombstones and compaction on Node/Bun, IndexedDB in the browser (`idb://name`), `:memory:` for tests. KV (edge) adapter is on the roadmap.
 - **Recall scoring:** `(cosine + entityBonus) × importance × 0.5^(age/halfLife)` where `entityBonus = min(0.3, 0.1 × shared entities)`. Recency, importance and the graph are first-class, not an afterthought.
+- **Relevance floor.** Embedding models never score unrelated texts at zero, so without a floor an off-topic query returns the least-irrelevant memories instead of nothing. Set `minSimilarity` (per instance or per recall) to cut on raw cosine before any weighting; entity-graph matches are exempt. The right value is model-dependent — measured on a mixed memory set (`bench/retrieval-eval.mjs`): correct hits vs best off-topic hit never overlapped, with a clean gap at **~0.5 for nomic-embed-text** and **~0.3 for all-MiniLM-L6-v2**.
 - **Exact search first, HNSW when it pays.** Below ~1000 memories, an exact scan over contiguous `Float32Array`s wins on every axis. Past that, a pure-TS HNSW graph index kicks in automatically (`index: 'auto'`, the default; force with `'hnsw'` or `'flat'`). Tag/date-filtered recalls always use the exact scan.
 
 ## Scale
@@ -121,7 +122,8 @@ claude mcp add rememori -- npx -y rememori-mcp
 - ~~v0.3 — browser support: IndexedDB storage + transformers.js recipe~~ ✅ shipped
 - ~~MCP server wrapper~~ ✅ shipped as [`rememori-mcp`](./mcp)
 - ~~v0.4 — pure-TS HNSW index~~ ✅ shipped
-- v0.5 — consolidation/forgetting policies, LongMemEval harness
+- ~~v0.5 — relevance floor (`minSimilarity`), measured per-model defaults~~ ✅ shipped
+- v0.6 — consolidation/forgetting policies, LongMemEval harness
 
 ## Non-goals
 

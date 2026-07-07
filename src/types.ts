@@ -42,6 +42,14 @@ export interface RecallOptions {
   /** Minimum final score to include. Default 0. */
   minScore?: number;
   /**
+   * Relevance floor on RAW cosine similarity, applied before importance,
+   * decay and the graph bonus. Hits below it are dropped unless they share
+   * an entity with the query. Model-dependent — measured good defaults:
+   * ~0.5 for nomic-embed-text, ~0.3 for all-MiniLM-L6-v2.
+   * Overrides the instance-level default from MemoryOptions.
+   */
+  minSimilarity?: number;
+  /**
    * Hybrid graph recall: entities are extracted from the query and memories
    * sharing them get a score bonus of min(0.3, 0.1 × shared). Default true.
    */
@@ -120,4 +128,10 @@ export interface MemoryOptions {
    * Tag/date-filtered recalls always use the exact scan.
    */
   index?: 'auto' | 'hnsw' | 'flat';
+  /**
+   * Default relevance floor for every recall (see RecallOptions.minSimilarity).
+   * Without it, embedding models never score unrelated texts at zero, so an
+   * off-topic query returns the least-irrelevant memories instead of nothing.
+   */
+  minSimilarity?: number;
 }

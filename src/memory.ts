@@ -41,6 +41,7 @@ export class Memory {
     private readonly storage: StorageAdapter,
     private readonly extractor: EntityExtractor | null,
     private readonly indexMode: 'auto' | 'hnsw' | 'flat',
+    private readonly defaultMinSimilarity: number,
   ) {}
 
   /**
@@ -51,7 +52,13 @@ export class Memory {
   static async open(path: string, options: MemoryOptions): Promise<Memory> {
     const storage = options.storage ?? defaultStorage(path);
     const extractor = options.extractor === false ? null : (options.extractor ?? heuristicExtractor);
-    const memory = new Memory(options.embedder, storage, extractor, options.index ?? 'auto');
+    const memory = new Memory(
+      options.embedder,
+      storage,
+      extractor,
+      options.index ?? 'auto',
+      options.minSimilarity ?? 0,
+    );
     memory.records = await storage.load();
     memory.byId = new Map(memory.records.map((r) => [r.id, r]));
     for (const record of memory.records) memory.indexEntities(record);
@@ -99,6 +106,7 @@ export class Memory {
 
     const limit = options.limit ?? 10;
     const minScore = options.minScore ?? 0;
+    const minSimilarity = options.minSimilarity ?? this.defaultMinSimilarity;
     const after = options.after === undefined ? -Infinity : toEpochMs(options.after);
     const before = options.before === undefined ? Infinity : toEpochMs(options.before);
     const now = Date.now();
@@ -134,6 +142,9 @@ export class Memory {
       const shared = queryEntitySet.size
         ? record.entities.filter((e) => queryEntitySet.has(e.toLowerCase()))
         : [];
+      /* relevance floor on raw similarity; entity matches are exempt —
+         the graph exists precisely to rescue low-similarity connections */
+      if (similarity < minSimilarity && shared.length === 0) continue;
       const bonus = Math.min(ENTITY_BONUS_CAP, ENTITY_BONUS * shared.length);
 
       let score = (similarity + bonus) * record.importance;

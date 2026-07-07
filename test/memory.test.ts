@@ -127,6 +127,40 @@ describe('Memory', () => {
   });
 });
 
+describe('Relevance floor (minSimilarity)', () => {
+  it('drops off-topic hits below the floor', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder, minSimilarity: 0.3 });
+    await mem.remember('coffee is life');
+    await mem.remember('music playlist for gym');
+
+    // "coffee brand cars" hits the coffee axis partially — sim < 1 but > 0.3
+    const onTopic = await mem.recall('coffee please');
+    expect(onTopic).toHaveLength(1);
+
+    // unknown-word query lands on the misc axis: sim 0 vs both → nothing
+    const offTopic = await mem.recall('unrelated gibberish query');
+    expect(offTopic).toHaveLength(0);
+  });
+
+  it('entity matches bypass the floor (graph rescue)', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder, minSimilarity: 0.9 });
+    await mem.remember('Giorgio fixed the car');
+    // similarity between query (misc axis) and record (car axis) is 0 < 0.9,
+    // but the shared entity keeps it in
+    const hits = await mem.recall('news from Giorgio?');
+    expect(hits).toHaveLength(1);
+    expect(hits[0]!.sharedEntities).toEqual(['Giorgio']);
+  });
+
+  it('per-call option overrides the instance default', async () => {
+    // instance floor above the max possible similarity → default excludes everything
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder, minSimilarity: 1.5 });
+    await mem.remember('coffee is life');
+    expect(await mem.recall('coffee please')).toHaveLength(0);
+    expect(await mem.recall('coffee please', { minSimilarity: 0 })).toHaveLength(1);
+  });
+});
+
 describe('Entity graph', () => {
   it('extracts entities heuristically and builds the graph', async () => {
     const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });

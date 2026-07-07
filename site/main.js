@@ -163,7 +163,7 @@ loadBtn?.addEventListener('click', async () => {
   try {
     const [{ pipeline }, { Memory }] = await Promise.all([
       import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/+esm'),
-      import('https://cdn.jsdelivr.net/npm/rememori@0.3.0/dist/index.js'),
+      import('https://cdn.jsdelivr.net/npm/rememori@0.4.0/dist/index.js'),
     ]);
 
     const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {

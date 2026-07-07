@@ -5,3 +5,10 @@ dist/
 *.mem
 *.rememori
 coverage/
+
+# IDE / assistant local config
+.idea/
+.claude/
+
+# internal drafts (not published)
+private/

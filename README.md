@@ -6,9 +6,9 @@
 
 > Agent memory that runs anywhere JavaScript runs.
 
-Pure TypeScript. **Zero runtime dependencies.** No native bindings, no compiler toolchain, no database server. One file on disk. Works in Node, Bun — and soon browsers and edge runtimes.
+Pure TypeScript. **Zero runtime dependencies.** No native bindings, no compiler toolchain, no database server. One file on disk — or IndexedDB in the browser. Works in Node, Bun and browsers today.
 
-**Status: early development (v0.0.x).** The core API below works and is tested, but expect breaking changes until v0.1.0.
+**Status: v0.4 — early but moving fast.** Vector recall, entity graph, temporal decay, HNSW index, browser/IndexedDB support and an [MCP server](./mcp) are in. The API below is tested; minor breaking changes possible until v1.0.
 
 ## Why
 
@@ -61,6 +61,10 @@ hits[0].sharedEntities; // ['Giorgio']
 mem.entities();        // top entities by linked memories
 mem.entity('Giorgio'); // linked memories + co-occurring entities
 ```
+
+### Fully local chat agent (Ollama)
+
+A complete chat agent with persistent memory across restarts — everything on your machine, no cloud: [`examples/ollama-chat.mjs`](./examples/ollama-chat.mjs) (~50 lines, runnable).
 
 ### In the browser — no server at all
 

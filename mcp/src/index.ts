@@ -40,7 +40,7 @@ await mkdir(dirname(path), { recursive: true });
 const minSimilarity = Number(process.env.REMEMORI_MIN_SIMILARITY ?? 0.5);
 const mem = await Memory.open(path, { embedder: makeEmbedder(), minSimilarity });
 
-const server = new McpServer({ name: 'rememori', version: '0.1.0' });
+const server = new McpServer({ name: 'rememori', version: '0.2.0' });
 
 const text = (data: unknown) => ({
   content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }],
@@ -87,6 +87,13 @@ server.tool(
       createdAt: new Date(h.createdAt).toISOString(),
     })));
   },
+);
+
+server.tool(
+  'reinforce',
+  'Signal that a memory was actually USED in your answer (not merely retrieved). Resets its decay clock and slightly hardens its ranking. Call it only for memories that genuinely contributed.',
+  { id: z.string().describe('Memory id to reinforce (get ids from recall).') },
+  async ({ id }) => text({ reinforced: await mem.reinforce(id) }),
 );
 
 server.tool(

@@ -38,6 +38,7 @@ claude mcp add rememori -e REMEMORI_EMBEDDER=openai -e OPENAI_API_KEY=sk-... -- 
 
 - **remember**(text, tags?, importance?) — store a memory
 - **recall**(query, limit?, halfLifeDays?, tags?) — semantic search with entity-graph bonus and optional time decay
+- **reinforce**(id) — mark a memory as actually used: resets its decay clock, hardens its ranking (log-damped)
 - **forget**(id) — delete
 - **entities**(name?, limit?) — explore the memory↔entity graph
 

@@ -12,6 +12,9 @@ interface AppendLine {
   importance: number;
   meta: Record<string, unknown>;
   createdAt: number;
+  /** Absent in pre-0.6 files; loader defaults to 0 / unset. */
+  reinforcements?: number;
+  reinforcedAt?: number;
 }
 
 interface TombstoneLine {
@@ -60,7 +63,7 @@ export class FileStorage implements StorageAdapter {
       if (parsed.op === 'del') {
         live.delete(parsed.id);
       } else {
-        live.set(parsed.id, {
+        const record: MemoryRecord = {
           id: parsed.id,
           text: parsed.text,
           vector: decodeVector(parsed.vector),
@@ -69,13 +72,16 @@ export class FileStorage implements StorageAdapter {
           importance: parsed.importance,
           meta: parsed.meta,
           createdAt: parsed.createdAt,
-        });
+          reinforcements: parsed.reinforcements ?? 0,
+        };
+        if (parsed.reinforcedAt !== undefined) record.reinforcedAt = parsed.reinforcedAt;
+        live.set(parsed.id, record);
       }
     }
     return [...live.values()];
   }
 
-  async append(record: MemoryRecord): Promise<void> {
+  private toLine(record: MemoryRecord): AppendLine {
     const line: AppendLine = {
       op: 'add',
       id: record.id,
@@ -86,9 +92,15 @@ export class FileStorage implements StorageAdapter {
       importance: record.importance,
       meta: record.meta,
       createdAt: record.createdAt,
+      reinforcements: record.reinforcements,
     };
+    if (record.reinforcedAt !== undefined) line.reinforcedAt = record.reinforcedAt;
+    return line;
+  }
+
+  async append(record: MemoryRecord): Promise<void> {
     const fs = await this.nodeFs();
-    await fs.appendFile(this.path, JSON.stringify(line) + '\n', 'utf8');
+    await fs.appendFile(this.path, JSON.stringify(this.toLine(record)) + '\n', 'utf8');
   }
 
   async tombstone(id: string): Promise<void> {
@@ -99,20 +111,7 @@ export class FileStorage implements StorageAdapter {
 
   async compact(records: MemoryRecord[]): Promise<void> {
     const fs = await this.nodeFs();
-    const lines = records.map((record) => {
-      const line: AppendLine = {
-        op: 'add',
-        id: record.id,
-        text: record.text,
-        vector: encodeVector(record.vector),
-        tags: record.tags,
-        entities: record.entities,
-        importance: record.importance,
-        meta: record.meta,
-        createdAt: record.createdAt,
-      };
-      return JSON.stringify(line);
-    });
+    const lines = records.map((record) => JSON.stringify(this.toLine(record)));
     const tmp = `${this.path}.tmp`;
     await fs.writeFile(tmp, lines.join('\n') + (lines.length ? '\n' : ''), 'utf8');
     await fs.rename(tmp, this.path);

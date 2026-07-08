@@ -21,6 +21,9 @@ import { InMemoryStorage } from './storage/memory.js';
 const DAY_MS = 86_400_000;
 const ENTITY_BONUS = 0.1;
 const ENTITY_BONUS_CAP = 0.3;
+/* reinforcement hardening: log-damped, capped below the entity bonus */
+const HARDENING_STEP = 0.05;
+const HARDENING_CAP = 0.15;
 /** below this many records, exact scan beats the index overhead */
 const HNSW_AUTO_THRESHOLD = 1000;
 /** rebuild the index when this fraction of its nodes are tombstones */
@@ -81,6 +84,7 @@ export class Memory {
       importance: clamp01(options.importance ?? 1),
       meta: options.meta ?? {},
       createdAt: options.createdAt ?? Date.now(),
+      reinforcements: 0,
     };
     this.records.push(record);
     this.byId.set(record.id, record);
@@ -146,10 +150,17 @@ export class Memory {
          the graph exists precisely to rescue low-similarity connections */
       if (similarity < minSimilarity && shared.length === 0) continue;
       const bonus = Math.min(ENTITY_BONUS_CAP, ENTITY_BONUS * shared.length);
+      const hardening = Math.min(
+        HARDENING_CAP,
+        HARDENING_STEP * Math.log2(1 + record.reinforcements),
+      );
 
-      let score = (similarity + bonus) * record.importance;
+      let score = (similarity + bonus + hardening) * record.importance;
       if (options.halfLifeDays !== undefined) {
-        const ageDays = Math.max(0, now - record.createdAt) / DAY_MS;
+        /* decay is anchored to the last useful recall, not creation:
+           memories that keep proving useful stop ageing */
+        const anchor = record.reinforcedAt ?? record.createdAt;
+        const ageDays = Math.max(0, now - anchor) / DAY_MS;
         score *= 0.5 ** (ageDays / options.halfLifeDays);
       }
       if (score <= 0 || score < minScore) continue;
@@ -169,6 +180,22 @@ export class Memory {
 
     hits.sort((a, b) => b.score - a.score);
     return hits.slice(0, limit);
+  }
+
+  /**
+   * Signal that a memory was actually USED — it made it into the answer,
+   * not merely into the candidate set. Resets its decay anchor and adds a
+   * log-damped scoring bonus. Deliberately explicit: recall() stays a pure
+   * read, and reinforcement coming from outside the ranking system is what
+   * prevents surfacing-feedback loops. Returns false if the id is unknown.
+   */
+  async reinforce(id: string): Promise<boolean> {
+    const record = this.byId.get(id);
+    if (!record) return false;
+    record.reinforcements += 1;
+    record.reinforcedAt = Date.now();
+    await this.storage.append(record); // append is an upsert: last write for an id wins
+    return true;
   }
 
   /** Delete a memory. Returns false if the id was unknown. */

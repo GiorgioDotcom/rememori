@@ -127,6 +127,53 @@ describe('Memory', () => {
   });
 });
 
+describe('Reinforcement', () => {
+  it('resets the decay anchor: a used old memory outranks an unused one', async () => {
+    const yearAgo = Date.now() - 365 * 86_400_000;
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    const used = await mem.remember('coffee useful fact', { createdAt: yearAgo });
+    await mem.remember('coffee stale fact', { createdAt: yearAgo });
+
+    // before reinforcement: both decayed equally
+    const before = await mem.recall('coffee', { halfLifeDays: 30 });
+    expect(before[0]!.score).toBeCloseTo(before[1]!.score, 3);
+
+    await mem.reinforce(used);
+    const after = await mem.recall('coffee', { halfLifeDays: 30 });
+    expect(after[0]!.id).toBe(used);
+    expect(after[0]!.score).toBeGreaterThan(after[1]!.score * 100);
+  });
+
+  it('hardening is log-damped and capped', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    const id = await mem.remember('coffee habit');
+    for (let i = 0; i < 100; i++) await mem.reinforce(id);
+    const [hit] = await mem.recall('coffee');
+    // similarity 1 + hardening capped at 0.15 → score ≤ 1.15
+    expect(hit!.score).toBeLessThanOrEqual(1.15 + 1e-9);
+    expect(hit!.score).toBeGreaterThan(1.14);
+  });
+
+  it('returns false for unknown ids', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    expect(await mem.reinforce('nope')).toBe(false);
+  });
+
+  it('persists across reopen (file storage)', async () => {
+    const path = await tmpFile();
+    const yearAgo = Date.now() - 365 * 86_400_000;
+    const mem = await Memory.open(path, { embedder: fakeEmbedder });
+    const id = await mem.remember('coffee persisted', { createdAt: yearAgo });
+    await mem.reinforce(id);
+    await mem.close();
+
+    const reopened = await Memory.open(path, { embedder: fakeEmbedder });
+    const [hit] = await reopened.recall('coffee', { halfLifeDays: 30 });
+    // anchor survived: no year-long decay applied
+    expect(hit!.score).toBeGreaterThan(0.9);
+  });
+});
+
 describe('Relevance floor (minSimilarity)', () => {
   it('drops off-topic hits below the floor', async () => {
     const mem = await Memory.open(':memory:', { embedder: fakeEmbedder, minSimilarity: 0.3 });

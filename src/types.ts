@@ -13,6 +13,18 @@ export interface MemoryRecord {
   meta: Record<string, unknown>;
   /** Epoch milliseconds. */
   createdAt: number;
+  /**
+   * Times this memory was explicitly reinforced via reinforce().
+   * Feeds a log-damped, capped scoring bonus — frequent use hardens
+   * a memory, but the effect cannot run away.
+   */
+  reinforcements: number;
+  /**
+   * Last explicit reinforcement (epoch ms). When set, temporal decay is
+   * anchored here instead of createdAt: a memory that keeps proving
+   * useful stops ageing; one never touched decays normally.
+   */
+  reinforcedAt?: number;
 }
 
 export interface RememberOptions {
@@ -59,7 +71,7 @@ export interface RecallOptions {
 export interface RecallHit {
   id: string;
   text: string;
-  /** Final score: (cosine + entity bonus) × importance × decay. */
+  /** Final score: (cosine + entity bonus + hardening) × importance × decay. */
   score: number;
   /** Raw cosine similarity, before graph/importance/decay weighting. */
   similarity: number;

@@ -40,11 +40,19 @@ const hits = await mem.recall('what UI settings does the user like?', {
   halfLifeDays: 90,
 });
 
+// reinforce — this memory actually made it into the answer:
+// resets its decay clock, hardens its ranking (log-damped, capped)
+await mem.reinforce(hits[0].id);
+
 // forget
 await mem.forget(hits[0].id);
 ```
 
-Three verbs. That's the API.
+Three verbs. That’s the API.
+
+### Reinforcement — why it's explicit
+
+A memory you use every day should not decay like one you never touch. But auto-reinforcing on recall would create a feedback loop: an early wrong memory keeps surfacing, keeps getting "reinforced", entrenches. So the signal is explicit — call `reinforce(id)` when a memory actually contributed to the answer, not when it merely appeared in candidates. Surfacing ≠ being useful; keeping the reinforcement signal outside the ranking system is what breaks the loop. Mechanically: the decay anchor moves to the last reinforcement (used memories stop ageing), plus a `min(0.15, 0.05·log₂(1+n))` scoring bonus — hardens, can't run away. `recall()` stays a pure read.
 
 ### Entity graph
 
@@ -123,7 +131,8 @@ claude mcp add rememori -- npx -y rememori-mcp
 - ~~MCP server wrapper~~ ✅ shipped as [`rememori-mcp`](./mcp)
 - ~~v0.4 — pure-TS HNSW index~~ ✅ shipped
 - ~~v0.5 — relevance floor (`minSimilarity`), measured per-model defaults~~ ✅ shipped
-- v0.6 — consolidation/forgetting policies, LongMemEval harness
+- ~~v0.6 — explicit reinforcement: decay anchoring + log-damped hardening~~ ✅ shipped
+- v0.7 — consolidation/forgetting policies, LongMemEval harness
 
 ## Non-goals
 

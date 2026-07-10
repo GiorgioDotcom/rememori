@@ -97,9 +97,13 @@
         <h2 class="trio">memori. <em>rememori.</em> forgesi.</h2>
         <p class="trio-sub">Remember, recall, forget — three verbs. That’s the API.</p>
         <p><strong>remember</strong> stores text with its embedding, tags and
-        extracted entities. <strong>recall</strong> ranks by cosine similarity ×
-        importance × time decay — plus a graph bonus for shared entities.
-        <strong>forget</strong> deletes. Everything else is an option, not a method.</p>
+        extracted entities. <strong>recall</strong> ranks by similarity, shared
+        entities, use-feedback, importance and time decay.
+        <strong>forget</strong> deletes.</p>
+        <p>Since v0.7 the loop closes: <strong>reinforce</strong> hardens a
+        memory only on verifiable evidence it was used — self-report would
+        entrench mistakes — and <strong>demote</strong> gives used-and-wrong
+        memories a path down.</p>
         <p class="aside">Bring any embedder: Ollama for local privacy, any
         OpenAI-compatible endpoint, or your own function.
         <span class="eo">The verbs are Esperanto, like the name.</span></p>
@@ -119,6 +123,7 @@
 <span class="ln">  limit: <span class="nu">5</span>, halfLifeDays: <span class="nu">90</span>,</span>
 <span class="ln">});</span>
 <span class="ln"> </span>
+<span class="ln"><span class="kw">await</span> mem.<span class="fn">reinforceFromOutput</span>(hits, answer);</span>
 <span class="ln"><span class="kw">await</span> mem.<span class="fn">forget</span>(hits[<span class="nu">0</span>].id);</span></code></pre>
     </div>
   </section>

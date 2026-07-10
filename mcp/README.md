@@ -13,7 +13,7 @@ ollama pull nomic-embed-text
 claude mcp add rememori -- npx -y rememori-mcp
 ```
 
-That's it. Claude Code now has four tools: `remember`, `recall`, `forget`, `entities`.
+That's it. Claude Code now has the full memory toolset — see [Tools](#tools) below.
 
 ## Configuration
 
@@ -39,6 +39,10 @@ claude mcp add rememori -e REMEMORI_EMBEDDER=openai -e OPENAI_API_KEY=sk-... -- 
 - **remember**(text, tags?, importance?) — store a memory
 - **recall**(query, limit?, halfLifeDays?, tags?) — semantic search with entity-graph bonus and optional time decay
 - **reinforce**(id) — mark a memory as actually used: resets its decay clock, hardens its ranking (log-damped)
+- **reinforce_from_output**(ids, output) — evidence-gated version: only memories verifiably quoted/used in the answer get reinforced (preferred)
+- **demote**(id) — negative feedback for used-and-wrong memories or contradiction losers
+- **collisions**(id, threshold?, limit?) — near-duplicates of a memory; the agent judges duplicate vs update vs contradiction, then demotes/forgets the loser
+- **get**(id) — read one memory with its reinforcement state
 - **forget**(id) — delete
 - **entities**(name?, limit?) — explore the memory↔entity graph
 

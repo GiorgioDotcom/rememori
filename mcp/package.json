@@ -1,6 +1,6 @@
 {
   "name": "rememori-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP server for rememori — persistent semantic memory for Claude Code and any MCP-capable agent.",
   "keywords": [
     "mcp",
@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "rememori": "^0.6.0",
+    "rememori": "^0.7.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {

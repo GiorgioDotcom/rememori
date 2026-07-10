@@ -8,7 +8,7 @@
 
 Pure TypeScript. **Zero runtime dependencies.** No native bindings, no compiler toolchain, no database server. One file on disk — or IndexedDB in the browser. Works in Node, Bun and browsers today.
 
-**Status: v0.4 — early but moving fast.** Vector recall, entity graph, temporal decay, HNSW index, browser/IndexedDB support and an [MCP server](./mcp) are in. The API below is tested; minor breaking changes possible until v1.0.
+**Status: v0.7 — early but moving fast.** Vector recall, entity graph, temporal decay, HNSW index, browser/IndexedDB support, relevance floor, an explicit feedback loop (reinforce/demote, evidence-gated) and an [MCP server](./mcp) are in. The API below is tested; minor breaking changes possible until v1.0.
 
 ## Why
 
@@ -49,6 +49,14 @@ await mem.forget(hits[0].id);
 ```
 
 Three verbs. That’s the API.
+
+### Feedback loop closed (v0.7)
+
+- **`demote(id)`** — symmetric negative feedback (log-damped, capped at −0.15): a used-and-wrong memory takes an explicit hit instead of waiting for decay, so "recalled and harmful" stops sharing a path with "never recalled".
+- **`reinforceFromOutput(hits, output)`** — evidence-gated reinforcement: only memories whose text verifiably appears in the final answer (quoted token run, or high distinct-token containment) get reinforced. Pure text matching, no embeddings — trusting the model's own "that helped" would rebuild the entrenchment loop one level up, and embedding similarity between memory and answer is the soft version of the same mistake.
+- **`collisions(id, { threshold = 0.8, limit = 5 })`** — near-duplicate detection at write time. The engine only detects *proximity*; deciding duplicate vs update vs contradiction is the caller's job, because embeddings can't detect contradictions — they embrace them ("needs Node 20" and "needs Node 18" embed almost identically). Typical flow: `remember()` → `collisions()` → your LLM adjudicates → `demote()` or `forget()` the loser.
+- **`get(id)`** — read one memory (text, tags, entities, importance, reinforcement state) as a defensive copy, without its vector.
+- The evidence check is exported standalone as **`useEvidence(memoryText, output, options?)`** if you want the verdict without the side effect. Numeric tokens veto both evidence paths (an output saying "Node 18" is never evidence for a memory saying "Node 20"). Known limitation: unsegmented CJK matches only on exact substring reuse.
 
 ### Reinforcement — why it's explicit
 
@@ -100,7 +108,7 @@ Runnable single-file demo: [`examples/browser-demo.html`](./examples/browser-dem
 
 - **Embedder is an interface, never bundled.** Bring Ollama (local, private), any OpenAI-compatible endpoint, or your own `(texts) => Float32Array[]` function.
 - **Storage is an adapter.** Append-only JSONL file with tombstones and compaction on Node/Bun, IndexedDB in the browser (`idb://name`), `:memory:` for tests. KV (edge) adapter is on the roadmap.
-- **Recall scoring:** `(cosine + entityBonus) × importance × 0.5^(age/halfLife)` where `entityBonus = min(0.3, 0.1 × shared entities)`. Recency, importance and the graph are first-class, not an afterthought.
+- **Recall scoring:** `(cosine + entityBonus + hardening) × importance × 0.5^(age/halfLife)` where `entityBonus = min(0.3, 0.1 × shared entities)` and `hardening = ±min(0.15, 0.05 × log₂(1+|feedback|))` from reinforce/demote. Decay is anchored to the last reinforcement, not creation. Recency, importance, the graph and use-feedback are first-class, not an afterthought.
 - **Relevance floor.** Embedding models never score unrelated texts at zero, so without a floor an off-topic query returns the least-irrelevant memories instead of nothing. Set `minSimilarity` (per instance or per recall) to cut on raw cosine before any weighting; entity-graph matches are exempt. The right value is model-dependent — measured on a mixed memory set (`bench/retrieval-eval.mjs`): correct hits vs best off-topic hit never overlapped, with a clean gap at **~0.5 for nomic-embed-text** and **~0.3 for all-MiniLM-L6-v2**.
 - **Exact search first, HNSW when it pays.** Below ~1000 memories, an exact scan over contiguous `Float32Array`s wins on every axis. Past that, a pure-TS HNSW graph index kicks in automatically (`index: 'auto'`, the default; force with `'hnsw'` or `'flat'`). Tag/date-filtered recalls always use the exact scan.
 
@@ -132,7 +140,8 @@ claude mcp add rememori -- npx -y rememori-mcp
 - ~~v0.4 — pure-TS HNSW index~~ ✅ shipped
 - ~~v0.5 — relevance floor (`minSimilarity`), measured per-model defaults~~ ✅ shipped
 - ~~v0.6 — explicit reinforcement: decay anchoring + log-damped hardening~~ ✅ shipped
-- v0.7 — consolidation/forgetting policies, LongMemEval harness
+- ~~v0.7 — demote(), evidence-gated reinforceFromOutput(), collision detection~~ ✅ shipped
+- v0.8 — LongMemEval harness
 
 ## Non-goals
 

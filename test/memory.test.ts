@@ -174,6 +174,115 @@ describe('Reinforcement', () => {
   });
 });
 
+describe('Demotion and collision plumbing (v0.7)', () => {
+  it('demote lowers ranking below an equal twin, symmetric cap', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    const bad = await mem.remember('coffee fact wrong');
+    await mem.remember('coffee fact right');
+
+    await mem.demote(bad);
+    const hits = await mem.recall('coffee');
+    expect(hits[1]!.id).toBe(bad);
+
+    for (let i = 0; i < 100; i++) await mem.demote(bad);
+    const [, worst] = await mem.recall('coffee');
+    // similarity ~1, penalty capped at −0.15 → score never below ~0.85
+    expect(worst!.score).toBeGreaterThan(0.84);
+    expect(await mem.demote('nope')).toBe(false);
+  });
+
+  it('negative reinforcements survive reopen', async () => {
+    const path = await tmpFile();
+    const mem = await Memory.open(path, { embedder: fakeEmbedder });
+    const id = await mem.remember('coffee demoted');
+    await mem.demote(id);
+    await mem.demote(id);
+    await mem.close();
+    const reopened = await Memory.open(path, { embedder: fakeEmbedder });
+    expect(reopened.get(id)!.reinforcements).toBe(-2);
+  });
+
+  it('collisions finds near-duplicates, not unrelated memories', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    const a = await mem.remember('coffee machine on floor two');
+    await mem.remember('coffee machine moved to floor three'); // same axis → sim 1
+    await mem.remember('music playlist for gym');              // different axis → sim 0
+
+    const clashes = mem.collisions(a);
+    expect(clashes).toHaveLength(1);
+    expect(clashes[0]!.text).toContain('floor three');
+    expect(clashes[0]!.similarity).toBeCloseTo(1, 5);
+    expect(mem.collisions('nope')).toEqual([]);
+  });
+
+  it('a demoted low-similarity memory may vanish entirely — locked-in behavior', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    // entity-rescued memory: query shares "Giorgio", similarity 0
+    const id = await mem.remember('Giorgio fixed the car');
+    expect(await mem.recall('updates from Giorgio?')).toHaveLength(1);
+
+    // demote past the entity bonus (0.1) → score goes ≤ 0 → gone
+    for (let i = 0; i < 10; i++) await mem.demote(id);
+    expect(await mem.recall('updates from Giorgio?')).toHaveLength(0);
+  });
+
+  it('demote then reinforce round-trips the counter', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    const id = await mem.remember('coffee round trip');
+    await mem.demote(id);
+    await mem.demote(id);
+    await mem.reinforce(id);
+    expect(mem.get(id)!.reinforcements).toBe(-1);
+    await mem.reinforce(id);
+    expect(mem.get(id)!.reinforcements).toBe(0);
+  });
+
+  it('collisions works with the HNSW index active', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder, index: 'hnsw' });
+    const a = await mem.remember('coffee machine on floor two');
+    await mem.remember('coffee machine on floor three');
+    await mem.remember('music playlist');
+    await mem.recall('coffee'); // force index build
+    const clashes = mem.collisions(a);
+    expect(clashes).toHaveLength(1);
+  });
+
+  it('get() returns defensive copies', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    const id = await mem.remember('coffee copy', { tags: ['keep'], meta: { n: 1 } });
+    const snapshot = mem.get(id)!;
+    snapshot.tags.push('EVIL');
+    (snapshot.meta as Record<string, unknown>).n = 999;
+    expect(mem.get(id)!.tags).toEqual(['keep']);
+    expect(mem.get(id)!.meta).toEqual({ n: 1 });
+  });
+
+  it('reinforceFromOutput dedupes repeated ids', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    const id = await mem.remember('the coffee deploy pipeline breaks when redis cache is cold');
+    const hit = { id, text: 'the coffee deploy pipeline breaks when redis cache is cold' };
+    const out = 'the deploy pipeline breaks when redis cache is cold';
+    const reinforced = await mem.reinforceFromOutput([hit, hit, hit], out);
+    expect(reinforced).toEqual([id]);
+    expect(mem.get(id)!.reinforcements).toBe(1);
+  });
+
+  it('reinforceFromOutput reinforces only verifiably used hits', async () => {
+    const mem = await Memory.open(':memory:', { embedder: fakeEmbedder });
+    const used = await mem.remember('the coffee deploy pipeline breaks when redis cache is cold');
+    const unused = await mem.remember('coffee standup meeting notes for monday');
+
+    const hits = (await mem.recall('coffee')).map((h) => ({ id: h.id, text: h.text }));
+    const output =
+      'Based on what I know, the deploy pipeline breaks when redis cache is cold, so warm it first.';
+    const reinforced = await mem.reinforceFromOutput(hits, output);
+
+    expect(reinforced).toEqual([used]);
+    expect(mem.get(used)!.reinforcements).toBe(1);
+    expect(mem.get(unused)!.reinforcements).toBe(0);
+  });
+});
+
 describe('Relevance floor (minSimilarity)', () => {
   it('drops off-topic hits below the floor', async () => {
     const mem = await Memory.open(':memory:', { embedder: fakeEmbedder, minSimilarity: 0.3 });

@@ -73,7 +73,7 @@
         <code>npm install rememori</code>
         <button type="button" data-copy="npm install rememori" aria-label="Copy install command">copy</button>
       </div>
-      <p class="facts">v0.4.0 &nbsp;·&nbsp; 0 dependencies &nbsp;·&nbsp; ~8 kB core &nbsp;·&nbsp; MIT</p>
+      <p class="facts">v0.7.0 &nbsp;·&nbsp; 0 dependencies &nbsp;·&nbsp; ~8 kB gz core &nbsp;·&nbsp; MIT</p>
       <p class="etymology">rememori — Esperanto for “to remember”. A language built to run anywhere. Same idea.</p>
     </div>
   </section>
@@ -200,7 +200,7 @@
         <p>Every memory links to the entities it mentions — a bipartite
         knowledge graph, built automatically at write time. At recall,
         memories sharing entities with the query get a bonus:</p>
-        <p class="formula"><code>(cosine + graph) × importance × decay</code></p>
+        <p class="formula"><code>(cosine + graph + feedback) × importance × decay</code></p>
         <p>So when the words don't match but the <em>who</em> does, the right
         memory still surfaces. Entity extraction is pluggable; the built-in
         heuristic costs zero dependencies and zero API calls.</p>

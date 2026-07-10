@@ -1,6 +1,6 @@
 {
   "name": "rememori",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Agent memory that runs anywhere JavaScript runs. Pure TypeScript, zero dependencies, embedded.",
   "keywords": [
     "ai",

@@ -14,9 +14,9 @@ export interface MemoryRecord {
   /** Epoch milliseconds. */
   createdAt: number;
   /**
-   * Times this memory was explicitly reinforced via reinforce().
-   * Feeds a log-damped, capped scoring bonus — frequent use hardens
-   * a memory, but the effect cannot run away.
+   * Net explicit feedback: reinforce() increments, demote() decrements —
+   * may be negative. Feeds a log-damped scoring adjustment capped at
+   * ±0.15, so use hardens and bad outcomes hurt, but neither runs away.
    */
   reinforcements: number;
   /**
@@ -100,6 +100,17 @@ export interface EntityCard {
   memories: { id: string; text: string; createdAt: number; tags: string[] }[];
   /** Entities co-occurring in the same memories, most frequent first. */
   coEntities: { name: string; count: number }[];
+}
+
+/** A stored memory suspiciously close to another one. The engine detects
+ *  proximity; judging duplicate vs update vs contradiction is the caller's
+ *  job (embeddings embrace contradictions — they can't detect them). */
+export interface CollisionHit {
+  id: string;
+  text: string;
+  /** Raw cosine similarity to the reference memory. */
+  similarity: number;
+  createdAt: number;
 }
 
 /** Turns texts into embedding vectors. The only external capability rememori needs. */

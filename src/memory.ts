@@ -1,4 +1,5 @@
 import type {
+  CollisionHit,
   Embedder,
   EntityCard,
   EntityExtractor,
@@ -10,6 +11,7 @@ import type {
   RememberOptions,
   StorageAdapter,
 } from './types.js';
+import { useEvidence, type EvidenceOptions } from './evidence.js';
 import { dot, normalize } from './similarity.js';
 import { parseDuration, toEpochMs } from './duration.js';
 import { heuristicExtractor } from './extract.js';
@@ -150,10 +152,10 @@ export class Memory {
          the graph exists precisely to rescue low-similarity connections */
       if (similarity < minSimilarity && shared.length === 0) continue;
       const bonus = Math.min(ENTITY_BONUS_CAP, ENTITY_BONUS * shared.length);
-      const hardening = Math.min(
-        HARDENING_CAP,
-        HARDENING_STEP * Math.log2(1 + record.reinforcements),
-      );
+      /* signed: reinforcements may be negative after demote() */
+      const n = record.reinforcements;
+      const mag = Math.min(HARDENING_CAP, HARDENING_STEP * Math.log2(1 + Math.abs(n)));
+      const hardening = n >= 0 ? mag : -mag;
 
       let score = (similarity + bonus + hardening) * record.importance;
       if (options.halfLifeDays !== undefined) {
@@ -196,6 +198,83 @@ export class Memory {
     record.reinforcedAt = Date.now();
     await this.storage.append(record); // append is an upsert: last write for an id wins
     return true;
+  }
+
+  /**
+   * Negative feedback: this memory was used and the outcome was bad, or it
+   * lost a contradiction to a newer memory. Symmetric with reinforce() —
+   * log-damped penalty capped at −0.15. Does not touch the decay anchor.
+   * A demoted memory ranks lower immediately instead of waiting for decay,
+   * so "recalled and harmful" stops sharing a path with "never recalled".
+   */
+  async demote(id: string): Promise<boolean> {
+    const record = this.byId.get(id);
+    if (!record) return false;
+    record.reinforcements -= 1;
+    /* note: a heavily demoted low-similarity memory can drop out of recall
+       entirely via the score<=0 cutoff, even when entity-rescued. That is
+       intended — "recalled and harmful" is allowed to disappear — and
+       covered by a test that locks the behavior in. */
+    await this.storage.append(record);
+    return true;
+  }
+
+  /**
+   * Evidence-gated reinforcement: reinforce only the hits whose text
+   * verifiably appears in `output` (a quoted token run, or high distinct-token
+   * containment). Text evidence only, no embeddings — embedding similarity
+   * between memory and answer would rebuild the self-report loop softly.
+   * Returns the ids that were reinforced.
+   */
+  async reinforceFromOutput(
+    hits: readonly { id: string; text: string }[],
+    output: string,
+    options: EvidenceOptions = {},
+  ): Promise<string[]> {
+    const reinforced: string[] = [];
+    const seen = new Set<string>();
+    for (const hit of hits) {
+      if (seen.has(hit.id) || !this.byId.has(hit.id)) continue;
+      seen.add(hit.id);
+      if (useEvidence(hit.text, output, options).used) {
+        await this.reinforce(hit.id);
+        reinforced.push(hit.id);
+      }
+    }
+    return reinforced;
+  }
+
+  /**
+   * Memories suspiciously close to the given one — near-duplicates, updates
+   * or contradictions. The engine only detects proximity; judging which of
+   * the three it is needs semantics the caller has (an LLM) and embeddings
+   * don't: contradictory statements embed almost identically. Typical flow:
+   * remember() → collisions() → caller adjudicates → demote()/forget().
+   */
+  collisions(id: string, options: { threshold?: number; limit?: number } = {}): CollisionHit[] {
+    const record = this.byId.get(id);
+    if (!record) return [];
+    const threshold = options.threshold ?? 0.8;
+    const limit = options.limit ?? 5;
+
+    const out: CollisionHit[] = [];
+    for (const other of this.records) {
+      if (other.id === id) continue;
+      const similarity = dot(record.vector, other.vector);
+      if (similarity >= threshold) {
+        out.push({ id: other.id, text: other.text, similarity, createdAt: other.createdAt });
+      }
+    }
+    return out.sort((a, b) => b.similarity - a.similarity).slice(0, limit);
+  }
+
+  /** Read one memory (without its vector). Defensive copy — mutating the
+   *  result never touches engine state. Null if unknown. */
+  get(id: string): Omit<MemoryRecord, 'vector'> | null {
+    const record = this.byId.get(id);
+    if (!record) return null;
+    const { vector: _vector, ...rest } = record;
+    return { ...rest, tags: [...record.tags], entities: [...record.entities], meta: { ...record.meta } };
   }
 
   /** Delete a memory. Returns false if the id was unknown. */
